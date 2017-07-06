@@ -1,0 +1,34 @@
+create table b1 (
+  xact_id int,
+  price int
+  );
+  
+create table b2 (
+  xact_id int,
+  price int
+  );
+
+INSERT INTO b1 (xact_id, price)
+  (SELECT rcpnbr, sum(ITEMTOTAL - DISCOUNT) 
+  FROM VS_TO_HOST_RECEIPT_DETAIL 
+  where rcpdate = '30.06.2017' 
+  and termid = 1  group by rcpnbr);
+
+INSERT INTO b2 (xact_id, price)
+  (select XACTNBR,sum(GROUPAMT) 
+  from tl_vat 
+  where tid = 1 
+  and dt_date='2017-06-30' 
+  group by XACTNBR);
+
+
+SELECT
+    COALESCE(detail.xact_id, tvat.xact_id)  AS xact_id,
+    detail.Price                      AS PriceTab1,
+    tvat.Price                      AS PriceTab2,
+    (tvat.Price-detail.Price)           AS Diff
+FROM
+    b1 AS detail
+  FULL JOIN
+    b2 AS tvat
+      ON detail.xact_id = tvat.xact_id ;
